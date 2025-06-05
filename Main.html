@@ -1,0 +1,504 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Russian Alphabet and Words Quiz</title>
+<style>
+  /* Colors */
+  :root {
+    --main-bg: #000000;
+    --secondary-color: #1acdfe;
+    --text-color: #eee;
+    --btn-bg: #111;
+    --btn-hover: #333;
+  }
+  body {
+    background-color: var(--main-bg);
+    color: var(--text-color);
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0 20px 40px 20px;
+  }
+  h1, h2 {
+    text-align: center;
+  }
+  button {
+    background-color: var(--btn-bg);
+    border: none;
+    color: var(--text-color);
+    padding: 10px 15px;
+    margin: 5px;
+    cursor: pointer;
+    border-radius: 5px;
+    font-size: 1rem;
+    transition: background-color 0.3s, color 0.3s;
+  }
+  button:hover {
+    background-color: var(--btn-hover);
+  }
+  button.active-btn {
+    background-color: var(--secondary-color);
+    color: #000;
+  }
+  .option-btn {
+    display: block;
+    width: 100%;
+    max-width: 300px;
+    margin: 10px auto;
+    padding: 12px;
+    font-size: 1.1rem;
+    border-radius: 5px;
+    background-color: var(--btn-bg);
+    color: var(--text-color);
+  }
+  .option-btn:hover {
+    background-color: var(--btn-hover);
+  }
+  .quiz-section {
+    display: none;
+    max-width: 400px;
+    margin: 20px auto;
+    padding: 15px;
+    background-color: #111;
+    border-radius: 8px;
+  }
+  .quiz-section.active {
+    display: block;
+  }
+  #letter-display, #word-display {
+    font-size: 3rem;
+    text-align: center;
+    margin: 20px 0;
+  }
+  #word-meaning {
+    text-align: center;
+    font-style: italic;
+    margin-bottom: 20px;
+    line-height: 1.4;
+  }
+  #letter-feedback, #word-feedback {
+    text-align: center;
+    font-weight: bold;
+    margin-top: 10px;
+    min-height: 1.5em;
+  }
+  #letter-score, #word-score, #letter-streak, #word-streak {
+    text-align: center;
+    margin: 5px 0;
+    font-size: 1rem;
+  }
+  #notes {
+    width: 100%;
+    max-width: 400px;
+    height: 150px;
+    margin: 10px auto;
+    display: block;
+    font-size: 1rem;
+    border-radius: 5px;
+    border: 1px solid #444;
+    background-color: #222;
+    color: var(--text-color);
+    padding: 10px;
+  }
+  #final-section p {
+    text-align: center;
+    font-size: 1.1rem;
+  }
+  #final-section h2 {
+    margin-bottom: 15px;
+  }
+  /* Russian flag top-left */
+  #flag {
+    position: fixed;
+    top: 10px;
+    left: 10px;
+    width: 80px;
+    height: 50px;
+    border: 1px solid #444;
+    box-shadow: 0 0 5px #000;
+    cursor: default;
+    z-index: 1000;
+  }
+  #flag > div {
+    height: 33.33%;
+  }
+  #flag .white {
+    background: white;
+  }
+  #flag .blue {
+    background: #1acdfe;
+  }
+  #flag .red {
+    background: #d52b1e;
+  }
+  /* Header buttons container */
+  #buttons {
+    text-align: center;
+    margin-top: 80px;
+  }
+</style>
+</head>
+<body>
+
+<!-- Russian flag -->
+<div id="flag">
+  <div class="white"></div>
+  <div class="blue"></div>
+  <div class="red"></div>
+</div>
+
+<h1>Russian Alphabet and Words Quiz</h1>
+
+<div id="buttons">
+  <button id="btn-letter">Letter Quiz</button>
+  <button id="btn-word">Word Quiz</button>
+  <button id="btn-write">Write Notes</button>
+</div>
+
+<!-- Letter Quiz Section -->
+<div id="letter-section" class="quiz-section">
+  <div id="letter-display"></div>
+  <div id="letter-options"></div>
+  <div id="letter-feedback"></div>
+  <div id="letter-score"></div>
+  <div id="letter-streak"></div>
+</div>
+
+<!-- Word Quiz Section -->
+<div id="word-section" class="quiz-section">
+  <div id="word-display"></div>
+  <div id="word-meaning"></div>
+  <div id="word-options"></div>
+  <div id="word-feedback"></div>
+  <div id="word-score"></div>
+  <div id="word-streak"></div>
+</div>
+
+<!-- Write Notes Section -->
+<div id="write-section" class="quiz-section">
+  <textarea id="notes" placeholder="Write your notes here..."></textarea>
+  <button id="save-notes">Save Notes</button>
+</div>
+
+<!-- Final Results Section -->
+<div id="final-section" class="quiz-section">
+  <div id="final-results"></div>
+  <button id="restart-btn">Restart Quiz</button>
+</div>
+
+<script>
+  // Letter quiz data (unchanged)
+  const letterQuestions = [
+    { letter: 'А', correct: 'A', options: ['A', 'O', 'E', 'I'] },
+    { letter: 'Б', correct: 'B', options: ['B', 'V', 'M', 'P'] },
+    { letter: 'В', correct: 'V', options: ['V', 'B', 'F', 'D'] },
+    { letter: 'Г', correct: 'G', options: ['G', 'K', 'H', 'Zh'] },
+    { letter: 'Д', correct: 'D', options: ['D', 'T', 'L', 'N'] },
+    { letter: 'Е', correct: 'Ye', options: ['Ye', 'E', 'I', 'A'] },
+    { letter: 'Ё', correct: 'Yo', options: ['Yo', 'Yu', 'Ya', 'Ye'] },
+    { letter: 'Ж', correct: 'Zh', options: ['Zh', 'Sh', 'Ch', 'J'] },
+    { letter: 'З', correct: 'Z', options: ['Z', 'S', 'T', 'F'] },
+    { letter: 'И', correct: 'I', options: ['I', 'E', 'A', 'U'] },
+    { letter: 'Й', correct: 'Y', options: ['Y', 'I', 'J', 'H'] },
+    { letter: 'К', correct: 'K', options: ['K', 'G', 'C', 'Q'] },
+    { letter: 'Л', correct: 'L', options: ['L', 'R', 'P', 'B'] },
+    { letter: 'М', correct: 'M', options: ['M', 'N', 'B', 'V'] },
+    { letter: 'Н', correct: 'N', options: ['N', 'M', 'L', 'K'] },
+    { letter: 'О', correct: 'O', options: ['O', 'A', 'E', 'U'] },
+    { letter: 'П', correct: 'P', options: ['P', 'B', 'R', 'F'] },
+    { letter: 'Р', correct: 'R', options: ['R', 'P', 'L', 'S'] },
+    { letter: 'С', correct: 'S', options: ['S', 'C', 'Z', 'X'] },
+    { letter: 'Т', correct: 'T', options: ['T', 'D', 'L', 'M'] },
+    { letter: 'У', correct: 'U', options: ['U', 'O', 'I', 'Y'] },
+    { letter: 'Ф', correct: 'F', options: ['F', 'V', 'P', 'B'] },
+    { letter: 'Х', correct: 'Kh', options: ['Kh', 'H', 'K', 'Ch'] },
+    { letter: 'Ц', correct: 'Ts', options: ['Ts', 'Ch', 'S', 'Z'] },
+    { letter: 'Ч', correct: 'Ch', options: ['Ch', 'Sh', 'Zh', 'J'] },
+    { letter: 'Ш', correct: 'Sh', options: ['Sh', 'Ch', 'Zh', 'Jh'] },
+    { letter: 'Щ', correct: 'Shch', options: ['Shch', 'Sh', 'Zh', 'Ch'] },
+    { letter: 'Ъ', correct: 'Hard Sign', options: ['Hard Sign', 'Soft Sign', 'Yo', 'Yu'] },
+    { letter: 'Ы', correct: 'Y', options: ['Y', 'I', 'E', 'A'] },
+    { letter: 'Ь', correct: 'Soft Sign', options: ['Soft Sign', 'Hard Sign', 'Yo', 'Yu'] },
+    { letter: 'Э', correct: 'E', options: ['E', 'A', 'O', 'U'] },
+    { letter: 'Ю', correct: 'Yu', options: ['Yu', 'Ya', 'Yo', 'Y'] },
+    { letter: 'Я', correct: 'Ya', options: ['Ya', 'Yu', 'Yo', 'Y'] },
+  ];
+
+  // Word quiz data - added pronunciation field
+  const wordQuestions = [
+    { word: 'как', meaning: 'how', correct: 'Kak', options: ['Kak', 'Кek', 'Кук', 'Кяк'] },
+    { word: 'люблю', meaning: 'love', correct: 'Lyublyu', options: ['Lubly', 'Lyubuy', 'Lyublyu', '´Luybyu'] },
+    { word: 'но', meaning: 'but', correct: 'No', options: ['Ho', 'No', 'Or', 'Us'] },
+    { word: 'да', meaning: 'yes', correct: 'Da', options: ['How', 'No', 'Maybe', 'Da'] },
+    { word: 'нет', meaning: 'no', correct: 'Nyet', options: ['Nyit', 'Niet', 'Net', 'Nyet'] },
+    { word: 'не', meaning: 'not', correct: 'not', options: ['nie', 'Nye', 'Noie', 'Net'] },
+    { word: 'идти', meaning: 'to go', correct: 'Idti', options: ['Idti', 'Igti', 'Idyti', 'Idiet'] },
+    { word: 'Доброе утро', meaning: 'Good morning', correct: 'Dobroye utro', options: ['Dobroye utro', 'Dobgoye Utri', 'Dubroye utro', 'Dobruye Utru'] },
+    { word: 'Спокойной ночи', meaning: 'Good night', correct: 'spokoynoy nochi', options: ['Spokoynoi nochi', 'Spokoynou nochi', 'Spokoynoy nochi', 'Spokoynoy nochy'] },
+    { word: 'Привет', meaning: 'Hi', correct: 'privet', options: ['Pribet', 'Prizet', 'Priget', 'Privet'] },
+    { word: 'здороваться', meaning: 'to greet', correct: 'Zdyrovatsyta', options: ['Zdorovetsya', 'Zdorovatsya', 'Zdyrovatsyta', 'Zdurovatcya'] },
+    { word: 'Спать', meaning: 'to sleep', correct: 'spat', options: ['srat', 'spet', 'sput', 'spat'] },
+    { word: 'Бегать', meaning: 'to run', correct: 'begat', options: ['begat', 'begyt', 'begut', 'beght'] },
+    { word: 'Ты', meaning: 'You (informal)', correct: 'Vy (formal)', options: ['Tu (formal)', 'Vy (formal)', 'Ty (formal)', 'Fy (formal)'] },
+    { word: 'Вы', meaning: 'You (formal/plural)', correct: 'Vy (formal/plural)', options: ['Ve (formal/plural)', 'Vu (formal/plural)', 'Vy (formal/plural)', 'By (formal/plural)'] },
+    { word: 'Как дела', meaning: 'How are you?', correct: 'Kak Dela?', options: ['Kak Deua?', 'Kek Dela', 'Kik Dela', 'Kak Dela?'] },
+    { word: 'что', meaning: 'what', correct: 'Chto', options: ['Chto', 'Chta', 'Cto', 'Ctoi'] },
+    { word: 'Не сейчас', meaning: 'Not now', correct: 'ne seychas', options: ['Net seychas', 'Ne seychas', 'Ne ceychas', 'Ne seuchas'] },
+    { word: 'Спасибо', meaning: 'Thank you', correct: 'Spasibo', options: ['Spasvbo', 'Spasibo', 'Spasybo', 'Spasiba'] },
+    { word: 'Пожалуйста', meaning: 'Please / You’re welcome', correct: 'pozhaluysta', options: ['pozhaluyste', 'pozhalysta', 'pozhaluysta', 'pezhaluysta'] },
+    { word: 'Извините', meaning: 'Sorry / Excuse me', correct: 'izvinite', options: ['izvinitie', 'izvinite', 'izvinitye', 'izinite'] },
+    { word: 'До свидания', meaning: 'Goodbye', correct: 'do svidaniya', options: ['do suidaniya', 'do svidaniya', 'de svidaniya', 'da svidaniya'] },
+  ];
+
+  // Global state
+  let currentLetterIndex = 0;
+  let currentWordIndex = 0;
+  let letterScore = 0;
+  let wordScore = 0;
+  let letterStreak = 0;
+  let wordStreak = 0;
+
+  // Shuffled copies of questions for randomness
+  let shuffledLetterQuestions = [];
+  let shuffledWordQuestions = [];
+
+  // Elements
+  const letterSection = document.getElementById('letter-section');
+  const wordSection = document.getElementById('word-section');
+  const writeSection = document.getElementById('write-section');
+  const finalSection = document.getElementById('final-section');
+
+  const btnLetter = document.getElementById('btn-letter');
+  const btnWord = document.getElementById('btn-word');
+  const btnWrite = document.getElementById('btn-write');
+
+  const letterDisplay = document.getElementById('letter-display');
+  const letterOptions = document.getElementById('letter-options');
+  const letterFeedback = document.getElementById('letter-feedback');
+  const letterScoreDisplay = document.getElementById('letter-score');
+  const letterStreakDisplay = document.getElementById('letter-streak');
+
+  const wordDisplay = document.getElementById('word-display');
+  const wordMeaning = document.getElementById('word-meaning');
+  const wordOptions = document.getElementById('word-options');
+  const wordFeedback = document.getElementById('word-feedback');
+  const wordScoreDisplay = document.getElementById('word-score');
+  const wordStreakDisplay = document.getElementById('word-streak');
+
+  const notes = document.getElementById('notes');
+  const saveNotesBtn = document.getElementById('save-notes');
+
+  const finalResults = document.getElementById('final-results');
+  const restartBtn = document.getElementById('restart-btn');
+
+  // Utility shuffle
+  function shuffle(array) {
+    const arr = array.slice();
+    for (let i = arr.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i+1));
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr;
+  }
+
+  // Load letter question
+  function loadLetterQuestion() {
+    if (currentLetterIndex >= shuffledLetterQuestions.length) {
+      checkShowFinal();
+      return;
+    }
+    letterFeedback.textContent = '';
+    const q = shuffledLetterQuestions[currentLetterIndex];
+    letterDisplay.textContent = q.letter;
+    const opts = shuffle(q.options);
+    letterOptions.innerHTML = '';
+    opts.forEach(opt => {
+      const btn = document.createElement('button');
+      btn.className = 'option-btn';
+      btn.textContent = opt;
+      btn.onclick = () => handleLetterAnswer(opt);
+      letterOptions.appendChild(btn);
+    });
+    letterScoreDisplay.textContent = `Score: ${letterScore} / ${shuffledLetterQuestions.length}`;
+    letterStreakDisplay.textContent = `Streak: ${letterStreak}`;
+  }
+
+  // Handle letter answer
+  function handleLetterAnswer(selected) {
+    const q = shuffledLetterQuestions[currentLetterIndex];
+    if (selected === q.correct) {
+      letterScore++;
+      letterStreak++;
+      letterFeedback.textContent = 'Correct!';
+      letterFeedback.style.color = '#1acdfe';
+    } else {
+      letterStreak = 0;
+      letterFeedback.textContent = `Wrong! Correct answer: ${q.correct}`;
+      letterFeedback.style.color = 'red';
+    }
+    currentLetterIndex++;
+    letterScoreDisplay.textContent = `Score: ${letterScore} / ${shuffledLetterQuestions.length}`;
+    letterStreakDisplay.textContent = `Streak: ${letterStreak}`;
+    setTimeout(loadLetterQuestion, 1000);
+  }
+
+  // Load word question (with pronunciation)
+  function loadWordQuestion() {
+    if (currentWordIndex >= shuffledWordQuestions.length) {
+      checkShowFinal();
+      return;
+    }
+    wordFeedback.textContent = '';
+    const q = shuffledWordQuestions[currentWordIndex];
+    wordDisplay.textContent = q.word;
+    wordMeaning.innerHTML = `Meaning: <em>${q.meaning}</em><br>How to say it: <strong>${q.pronunciation}</strong>`;
+    const opts = shuffle(q.options);
+    wordOptions.innerHTML = '';
+    opts.forEach(opt => {
+      const btn = document.createElement('button');
+      btn.className = 'option-btn';
+      btn.textContent = opt;
+      btn.onclick = () => handleWordAnswer(opt);
+      wordOptions.appendChild(btn);
+    });
+    wordScoreDisplay.textContent = `Score: ${wordScore} / ${shuffledWordQuestions.length}`;
+    wordStreakDisplay.textContent = `Streak: ${wordStreak}`;
+  }
+
+  // Handle word answer
+  function handleWordAnswer(selected) {
+    const q = shuffledWordQuestions[currentWordIndex];
+    if (selected === q.correct) {
+      wordScore++;
+      wordStreak++;
+      wordFeedback.textContent = 'Correct!';
+      wordFeedback.style.color = '#1acdfe';
+    } else {
+      wordStreak = 0;
+      wordFeedback.textContent = `Wrong! Correct answer: ${q.correct}`;
+      wordFeedback.style.color = 'red';
+    }
+    currentWordIndex++;
+    wordScoreDisplay.textContent = `Score: ${wordScore} / ${shuffledWordQuestions.length}`;
+    wordStreakDisplay.textContent = `Streak: ${wordStreak}`;
+    setTimeout(loadWordQuestion, 1000);
+  }
+
+  // Show final results
+  function checkShowFinal() {
+    // If both quizzes finished, show final results
+    if (currentLetterIndex >= shuffledLetterQuestions.length && currentWordIndex >= shuffledWordQuestions.length) {
+      showFinalResults();
+      return;
+    }
+    // If letter quiz done, but word quiz not done, switch to word quiz
+    if (currentLetterIndex >= shuffledLetterQuestions.length) {
+      switchSection('word');
+      loadWordQuestion();
+      return;
+    }
+    // If word quiz done but letter quiz not done, switch to letter quiz
+    if (currentWordIndex >= shuffledWordQuestions.length) {
+      switchSection('letter');
+      loadLetterQuestion();
+      return;
+    }
+  }
+
+  // Show final results screen
+  function showFinalResults() {
+    letterSection.classList.remove('active');
+    wordSection.classList.remove('active');
+    writeSection.classList.remove('active');
+    finalSection.classList.add('active');
+    const totalQuestions = shuffledLetterQuestions.length + shuffledWordQuestions.length;
+    const totalCorrect = letterScore + wordScore;
+    const accuracy = ((totalCorrect / totalQuestions) * 100).toFixed(2);
+    finalResults.innerHTML = `
+      <h2>Quiz Completed!</h2>
+      <p>Letter Quiz Score: ${letterScore} / ${shuffledLetterQuestions.length}</p>
+      <p>Word Quiz Score: ${wordScore} / ${shuffledWordQuestions.length}</p>
+      <p><strong>Overall Accuracy: ${accuracy}%</strong></p>
+    `;
+  }
+
+  // Restart quiz
+  restartBtn.onclick = () => {
+    currentLetterIndex = 0;
+    currentWordIndex = 0;
+    letterScore = 0;
+    wordScore = 0;
+    letterStreak = 0;
+    wordStreak = 0;
+    shuffledLetterQuestions = shuffle(letterQuestions);
+    shuffledWordQuestions = shuffle(wordQuestions);
+    finalSection.classList.remove('active');
+    switchSection('letter');
+    loadLetterQuestion();
+  };
+
+  // Switch section and update active button color
+  function switchSection(section) {
+    btnLetter.classList.remove('active-btn');
+    btnWord.classList.remove('active-btn');
+    btnWrite.classList.remove('active-btn');
+
+    letterSection.classList.remove('active');
+    wordSection.classList.remove('active');
+    writeSection.classList.remove('active');
+    finalSection.classList.remove('active');
+
+    if (section === 'letter') {
+      letterSection.classList.add('active');
+      btnLetter.classList.add('active-btn');
+    } else if (section === 'word') {
+      wordSection.classList.add('active');
+      btnWord.classList.add('active-btn');
+    } else if (section === 'write') {
+      writeSection.classList.add('active');
+      btnWrite.classList.add('active-btn');
+    }
+  }
+
+  // Buttons event listeners
+  btnLetter.onclick = () => {
+    switchSection('letter');
+    if (currentLetterIndex < shuffledLetterQuestions.length) {
+      loadLetterQuestion();
+    } else {
+      checkShowFinal();
+    }
+  };
+
+  btnWord.onclick = () => {
+    switchSection('word');
+    if (currentWordIndex < shuffledWordQuestions.length) {
+      loadWordQuestion();
+    } else {
+      checkShowFinal();
+    }
+  };
+
+  btnWrite.onclick = () => {
+    switchSection('write');
+  };
+
+  // Save notes button (just alert saved for demo)
+  saveNotesBtn.onclick = () => {
+    alert('Notes saved!');
+  };
+
+  // Initialization
+  function init() {
+    shuffledLetterQuestions = shuffle(letterQuestions);
+    shuffledWordQuestions = shuffle(wordQuestions);
+    switchSection('letter');
+    loadLetterQuestion();
+  }
+
+  init();
+</script>
+
+</body>
+</html>
